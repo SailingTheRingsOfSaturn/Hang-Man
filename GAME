@@ -1,0 +1,183 @@
+# Hangman in Python
+words = ("aardvark", "alligator", "alpaca", "ant", "anteater", "antelope", "ape", "armadillo", "baboon", "badger", "bat", "bear", "beaver", "bee", "bison", "boar", "buffalo", "butterfly", "camel", "capybara", "caribou", "cat", "caterpillar", "cattle", "chamois", "cheetah", "chicken", "chimpanzee", "chinchilla", "chough", "clam", "cobra", "cockroach", "cod", "coyote", "crab", "crane", "crocodile", "crow", "curlew", "deer", "dinosaur", "dog", "dogfish", "dolphin", "donkey", "dormouse", "dotterel", "dove", "dragonfly", "duck", "dugong", "dunlin", "eagle", "echidna", "eel", "eland", "elephant",  "elk", "emu", "falcon", "ferret", "finch", "fish", "flamingo", "fly", "fox", "frog", "gaur", "gazelle", "gerbil", "giraffe", "gnat", "gnu", "goat", "goldfinch", "goldfish", "goose", "gorilla", "goshawk", "grasshopper", "grouse", "guanaco", "gull", "hamster", "hare", "hawk", "hedgehog", "heron", "herring", "hippopotamus", "hornet", "horse", "human", "hummingbird", "hyena", "ibex", "ibis", "jackal", "jaguar", "jay", "jellyfish", "kangaroo", "kingfisher", "koala", "kookabura", "kouprey", "kudu", "lapwing", "lark", "lemur", "leopard", "lion", "llama", "lobster", "locust", "loris", "louse", "lyrebird", "magpie", "mallard", "manatee", "mandrill", "mantis", "marten", "meerkat", "mink", "mole", "mongoose", "monkey", "moose", "mosquito", "mouse", "mule", "narwhal", "newt", "nightingale", "octopus", "okapi", "opossum", "oryx", "ostrich", "otter", "owl", "ox", "oyster", "panda", "panther", "parrot", "partridge", "peafowl", "pelican", "penguin", "pheasant", "pig", "pigeon", "polar-bear", "pony", "porcupine", "porpoise", "quail", "quelea", "quetzal", "rabbit", "raccoon", "rail", "ram", "rat", "raven", "red-deer", "red-panda", "reindeer", "rhinoceros", "rook", "salamander", "salmon", "sand-dollar", "sandpiper", "sardine", "scorpion", "seahorse", "seal", "shark", "sheep", "shrew", "skunk", "snail", "snake", "sparrow", "spider", "spoonbill", "squid", "squirrel", "starling", "stingray", "stoat", "stork", "swallow", "swan", "tapir", "tarsier", "termite", "tiger", "toad", "trout", "turkey", "turtle", "viper", "vulture", "wallaby", "walrus", "wasp", "weasel", "whale", "wildcat", "wolf", "wolverine", "wombat", "woodcock", "woodpecker", "worm", "wren", "yak", "zebra")
+import random
+import tkinter as tk
+
+
+hangman_art = {0: ("   ",
+
+                                   "   ",
+
+                                   "   "),
+
+                             1: (" o ",
+
+                                   "   ",
+
+                                   "   "),
+
+                             2: (" o ",
+
+                                   " | ",
+
+                                   "   "),
+
+                             3: (" o ",
+
+                                   "/| ",
+
+                                   "   "),
+
+                             4: (" o ",
+
+                                  "/|\\",
+
+                                   "   "),
+
+                              5: (" o ",
+
+                                   "/|\\",
+
+                                   "/  "),
+
+                              6: (" o ",
+
+                                   "/|\\",
+
+                                   "/ \\")}
+
+# GUI Hangman Game class
+class HangmanGame:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("ASCII Hangman")
+
+        # GUI elements
+        self.display = tk.Text(root, width=40, height=15, font=("Courier", 14))
+        self.display.pack(pady=10)
+
+        self.entry = tk.Entry(root, font=("Courier", 14))
+        self.entry.pack()
+        self.entry.bind("<Return>", self.guess_letter)
+
+        self.reset_button = tk.Button(root, text="Reset Game", font=("Courier", 12), command=self.reset_game)
+        self.reset_button.pack(pady=5)
+
+        self.reset_game(first=True)
+
+    def reset_game(self, first=False):
+        self.answer = random.choice(words)
+        self.hint = ["_"] * len(self.answer)
+        self.guessed_letters = set()
+        self.wrong_guesses = 0
+        self.max_wrong = len(hangman_art) - 1
+        self.entry.config(state=tk.NORMAL)
+        if not first:
+            self.update_display("Game reset! New word selected.")
+        else:
+            self.update_display("Welcome to ASCII Hangman!\nType a letter and press Enter.")
+
+    def update_display(self, message=""):
+        self.display.delete(1.0, tk.END)
+        self.display.insert(tk.END, "**********\n")
+        for line in hangman_art[self.wrong_guesses]:
+            self.display.insert(tk.END, line + "\n")
+        self.display.insert(tk.END, "**********\n")
+        self.display.insert(tk.END, "Word: " + " ".join(self.hint) + "\n")
+        self.display.insert(tk.END, f"Guessed: {', '.join(sorted(self.guessed_letters))}\n")
+        if message:
+            self.display.insert(tk.END, "\n" + message + "\n")
+
+    def guess_letter(self, event):
+        guess = self.entry.get().lower()
+        self.entry.delete(0, tk.END)
+
+        if not guess.isalpha() or len(guess) != 1:
+            self.update_display("Invalid input. Please enter one letter.")
+            return
+
+        if guess in self.guessed_letters:
+            self.update_display(f"You already guessed '{guess}'!")
+            return
+
+        self.guessed_letters.add(guess)
+
+        if guess in self.answer:
+            for i, char in enumerate(self.answer):
+                if char == guess:
+                    self.hint[i] = guess
+            if "_" not in self.hint:
+                self.update_display(f"You win! The word was '{self.answer}'.")
+                self.entry.config(state=tk.DISABLED)
+        else:
+            self.wrong_guesses += 1
+            if self.wrong_guesses >= self.max_wrong:
+                self.update_display(f"You lose! The word was '{self.answer}'.")
+                self.entry.config(state=tk.DISABLED)
+            else:
+                self.update_display(f"Wrong guess: '{guess}'")
+
+# Start GUI
+if __name__ == "__main__":
+    root = tk.Tk()
+    game = HangmanGame(root)
+    root.mainloop()
+
+
+
+def display_man(wrong_guesses):
+    print("**********")
+    for line in hangman_art[wrong_guesses]:
+        print(line)
+    print("**********")
+    
+
+
+def display_hint(hint):
+    print(" ".join(hint))
+
+def display_answer(anwser):
+    print(" ".join(anwser))
+
+def main():
+    answer = random.choice(words)
+    hint= ["_"] * len(answer)
+    wrong_guesses = 0 
+    guessed_letters = set ()
+    is_running = True
+
+    while is_running:
+        display_man(wrong_guesses)
+        display_hint(hint)
+        guess = input("Enter a letter:").lower()
+
+        if len(guess) != 1 or not guess.isalpha():
+            print("Invalid input")
+            continue
+
+        if guess in guessed_letters:
+            print(f"{guess} is already guessed")
+            continue 
+
+        guessed_letters.add(guess)
+
+        if guess in answer:
+            for i in range(len(answer)):
+                if answer [i] == guess:
+                    hint[i] = guess
+        else:
+            wrong_guesses += 1 
+
+        if "_" not in hint:
+            display_man(wrong_guesses)
+            display_answer(answer)
+            print ("You are awesome, nice job!")
+            id_running = False
+        elif wrong_guesses >=len(hangman_art) - 1:
+            display_man(wrong_guesses)
+            display_answer(answer)
+            print("Wow! you must be real dumb :(-|-< )")
+
+
+if __name__== "__main__":
+    main()
